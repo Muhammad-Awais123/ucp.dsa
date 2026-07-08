@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+// Use Vercel's relative /api path in production, or localhost for local development
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:5000/api';
 
 export const getStudents = async (slot = '') => {
     const url = slot ? `${API_URL}/students?slot=${encodeURIComponent(slot)}` : `${API_URL}/students`;
