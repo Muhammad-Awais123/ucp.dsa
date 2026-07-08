@@ -18,6 +18,16 @@ export const markAttendance = async (studentId, date, status) => {
     return response.data;
 };
 
+export const updateStudent = async (studentId, name) => {
+    const response = await axios.put(`${API_URL}/students/${studentId}`, { name });
+    return response.data;
+};
+
+export const deleteStudent = async (studentId) => {
+    const response = await axios.delete(`${API_URL}/students/${studentId}`);
+    return response.data;
+};
+
 export const exportToExcel = (slot = '') => {
     const url = slot ? `${API_URL}/export?slot=${encodeURIComponent(slot)}` : `${API_URL}/export`;
     window.open(url, '_blank');

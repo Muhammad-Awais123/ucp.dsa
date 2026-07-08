@@ -81,6 +81,38 @@ router.post('/attendance', async (req, res) => {
     }
 });
 
+// Update student name
+router.put('/students/:id', async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || name.trim() === '') {
+            return res.status(400).json({ error: 'Name cannot be empty' });
+        }
+        
+        const student = await Student.findById(req.params.id);
+        if (!student) return res.status(404).json({ error: 'Student not found' });
+
+        student.name = name.trim();
+        await student.save();
+        
+        res.json(calculateStats(student));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Delete student
+router.delete('/students/:id', async (req, res) => {
+    try {
+        const student = await Student.findByIdAndDelete(req.params.id);
+        if (!student) return res.status(404).json({ error: 'Student not found' });
+        
+        res.json({ message: 'Student deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Export to Excel
 router.get('/export', async (req, res) => {
     try {

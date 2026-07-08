@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { markAttendance } from '../api';
+import { Edit2, Trash2, Check, X } from 'lucide-react';
+import { markAttendance, updateStudent, deleteStudent } from '../api';
 
-const StudentList = ({ students, onAttendanceUpdate }) => {
+const StudentList = ({ students, onAttendanceUpdate, onStudentDeleted }) => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [loadingId, setLoadingId] = useState(null);
+    const [editingId, setEditingId] = useState(null);
+    const [editName, setEditName] = useState('');
 
     const handleMark = async (studentId, status) => {
         setLoadingId(studentId);
@@ -13,6 +16,50 @@ const StudentList = ({ students, onAttendanceUpdate }) => {
         } catch (error) {
             console.error('Error marking attendance:', error);
             alert('Failed to mark attendance.');
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
+    const handleEdit = (student) => {
+        setEditingId(student._id);
+        setEditName(student.name);
+    };
+
+    const handleCancel = () => {
+        setEditingId(null);
+        setEditName('');
+    };
+
+    const handleSave = async (studentId) => {
+        if (!editName.trim()) {
+            alert('Name cannot be empty');
+            return;
+        }
+        setLoadingId(studentId);
+        try {
+            const updatedStudent = await updateStudent(studentId, editName);
+            onAttendanceUpdate(updatedStudent); // Reusing this prop to update the student in the list
+            setEditingId(null);
+            setEditName('');
+        } catch (error) {
+            console.error('Error updating name:', error);
+            alert('Failed to update student name.');
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
+    const handleDelete = async (studentId) => {
+        if (!window.confirm('Are you sure you want to delete this student?')) return;
+        
+        setLoadingId(studentId);
+        try {
+            await deleteStudent(studentId);
+            onStudentDeleted(studentId);
+        } catch (error) {
+            console.error('Error deleting student:', error);
+            alert('Failed to delete student.');
         } finally {
             setLoadingId(null);
         }
@@ -44,6 +91,7 @@ const StudentList = ({ students, onAttendanceUpdate }) => {
                             <th>Absent</th>
                             <th>Attendance %</th>
                             <th>Quick Mark</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,7 +108,20 @@ const StudentList = ({ students, onAttendanceUpdate }) => {
                                 return (
                                     <tr key={student._id}>
                                         <td style={{ fontWeight: 600 }}>{index + 1}</td>
-                                        <td>{student.name}</td>
+                                        <td>
+                                            {editingId === student._id ? (
+                                                <input 
+                                                    type="text" 
+                                                    className="form-control" 
+                                                    value={editName}
+                                                    onChange={(e) => setEditName(e.target.value)}
+                                                    autoFocus
+                                                    style={{ padding: '6px', fontSize: '0.9rem', minWidth: '150px' }}
+                                                />
+                                            ) : (
+                                                student.name
+                                            )}
+                                        </td>
                                         <td>{student.stats.presentClasses}</td>
                                         <td>{student.stats.absentClasses}</td>
                                         <td>
@@ -96,6 +157,53 @@ const StudentList = ({ students, onAttendanceUpdate }) => {
                                                     >
                                                         Clear
                                                     </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                {editingId === student._id ? (
+                                                    <>
+                                                        <button 
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '6px', color: 'var(--success)', opacity: loadingId === student._id ? 0.5 : 1 }}
+                                                            onClick={() => handleSave(student._id)}
+                                                            disabled={loadingId === student._id}
+                                                            title="Save"
+                                                        >
+                                                            <Check size={18} />
+                                                        </button>
+                                                        <button 
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '6px', color: 'var(--danger)' }}
+                                                            onClick={handleCancel}
+                                                            disabled={loadingId === student._id}
+                                                            title="Cancel"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button 
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '6px', color: 'var(--secondary-accent)', opacity: loadingId === student._id ? 0.5 : 1 }}
+                                                            onClick={() => handleEdit(student)}
+                                                            disabled={loadingId === student._id}
+                                                            title="Edit Name"
+                                                        >
+                                                            <Edit2 size={18} />
+                                                        </button>
+                                                        <button 
+                                                            className="btn btn-outline"
+                                                            style={{ padding: '6px', color: 'var(--danger)', opacity: loadingId === student._id ? 0.5 : 1 }}
+                                                            onClick={() => handleDelete(student._id)}
+                                                            disabled={loadingId === student._id}
+                                                            title="Delete Student"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </>
                                                 )}
                                             </div>
                                         </td>

@@ -48,6 +48,10 @@ function App() {
         setStudents(prev => prev.map(s => s._id === updatedStudent._id ? updatedStudent : s));
     };
 
+    const handleStudentDeleted = (studentId) => {
+        setStudents(prev => prev.filter(s => s._id !== studentId));
+    };
+
     const handleLogin = () => {
         setIsAuthenticated(true);
         localStorage.setItem('auth', 'true');
@@ -95,7 +99,7 @@ function App() {
                     <>
                         <Dashboard students={students} selectedSlot={selectedSlot} />
                         <AddStudentForm onStudentAdded={handleStudentAdded} defaultSlot={selectedSlot} />
-                        <StudentList students={students} onAttendanceUpdate={handleAttendanceUpdate} selectedSlot={selectedSlot} />
+                        <StudentList students={students} onAttendanceUpdate={handleAttendanceUpdate} onStudentDeleted={handleStudentDeleted} selectedSlot={selectedSlot} />
                     </>
                 )}
             </main>
